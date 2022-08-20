@@ -4,7 +4,7 @@ library(dplyr)
 library(ggplot2)
 library(matrixStats)
 
-gf <- read_csv("SearchResults_allcolumns_20220817.csv")
+gf <- read_csv("data/SearchResults_allcolumns_20220817.csv")
 
 ###Filtering for only "Drug" interventions
 gf %<>% filter(grepl('Drug:', Interventions))
@@ -24,6 +24,12 @@ parse_dates <- function(input) {
 		date <- unlist(strsplit(input, " "))[2] %>% gsub(",", "", .)
 		year <- unlist(strsplit(input, " "))[3]
 	}
+	
+	if(is.na(strsplit(input, " "))==TRUE) {
+	month="NA"
+	date="NA"
+	year="NA"
+	}
 
 	return(c(month,date,year))
 }
@@ -37,7 +43,15 @@ colnames(ct_dates) <- c("start_month", "start_date", "start_year")
 
 gf %<>% cbind(., ct_dates)
 
-summary(as.factor(gf$start_year)) ###To exclude start year 2050 (error)
+summary(as.factor(gf$start_year)) ###To exclude start year 2050 later?
+
+
+if (!require("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+BiocManager::install("ChemmineDrugs")
+
+webchem
+
 
 ###Filtering medications under study
 
