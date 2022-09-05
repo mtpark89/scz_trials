@@ -45,24 +45,39 @@ gf %<>% cbind(., ct_dates)
 
 summary(as.factor(gf$start_year)) ###To exclude start year 2050 later?
 
-
-if (!require("BiocManager", quietly = TRUE))
-    install.packages("BiocManager")
-BiocManager::install("ChemmineDrugs")
-
-webchem
-
-
 ###Filtering medications under study
 
-gf$Interventions %>% strsplit(., "\\|") %>% lengths()
+gf$Interventions_lengths <- gf$Interventions %>% strsplit(., "\\|") %>% lengths()
 
-test <- gf$Interventions %>% strsplit(., "\\|") %>% lengths()
-test %<>% as.data.frame()
+#Most likely main intervention--to check after
+gf %<>% rowwise() %>% mutate(First_intervention =( Interventions%>% strsplit(., "\\|") %>% unlist() %>% .[1] %>% strsplit(., " ") %>% unlist() %>% .[2]))
 
-what <- gf[test$.==1,]
+library(webchem)
+
+#Get CIDs, and record descriptions from PubChem
+gf$CID <- get_cid(gf$First_intervention, match="first")
+
+pc_sect(test$cid, "Record Description")
+
+descriptions <- pc_sect(gf$CID, "Record Description")
+descriptions_compound <- pc_sect(gf$CID, "Record Description", domain="compound")
+
+patterns <- c("choline", "muscari")
+
+descriptions_cholinergic <- descriptions %>% filter(grepl(paste(patterns, collapse="|"), Result, ignore.case=TRUE))
+
+################################################################################33
+###Not used
 
 ###Filtering outcome measures, primary is the first one? Recheck later...
 patterns <- c("positive", "negative", "PANSS", "CGI", "clinical")
 
 test <- gf %>% filter(grepl(paste(patterns, collapse="|"), `Outcome Measures`, ignore.case = TRUE))
+
+
+
+if (!require("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+BiocManager::install("ChemmineDrugs")
+
+
